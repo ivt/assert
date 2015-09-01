@@ -1,3 +1,6 @@
 {
     "name": "ivt-library/assert",
+    "require": {
+        "fail-whale/fail-whale": "*"
+    }
 }
