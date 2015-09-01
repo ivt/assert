@@ -1,6 +1,6 @@
 <?php
 
-namespace IVTLibrary;
+namespace IVT;
 
 class Assert
 {
