@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "5d9d71f8088a33010e701d426b300c30",
+    "hash": "f28c21ec217575e3e2fe1e32d4b053df",
     "packages": [
         {
             "name": "fail-whale/fail-whale",

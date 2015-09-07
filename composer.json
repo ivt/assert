@@ -1,6 +1,9 @@
 {
     "name": "ivt/assert",
     "description": "Assertions for specific types, returning input value to reduce temporary variables",
+    "autoload": {
+        "classmap": ["src/"]
+    },
     "require": {
         "fail-whale/fail-whale": "^0.1.0"
     }
