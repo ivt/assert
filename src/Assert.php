@@ -2,216 +2,421 @@
 
 namespace IVT;
 
-class Assert
-{
-	static function equal( $actual, $expected, $message = '' )
-	{
-		if ( $actual === $expected )
-			return;
+use Exception;
 
-		$expected = self::dump( $expected );
-		$actual   = self::dump( $actual );
+final class Assert {
+    static function equal($actual, $expected, $message = '') {
+        if ($actual === $expected)
+            return;
 
-		throw new AssertionFailed( $message ?: "Expected $expected, got $actual" );
-	}
+        $expected = self::dump($expected);
+        $actual   = self::dump($actual);
 
-	/**
-	 * @param mixed $value
-	 * @return string
-	 */
-	static function dump( $value )
-	{
-		return var_export( $value, true );
-	}
+        throw new AssertionFailed($message ?: "Expected $expected, got $actual");
+    }
 
-	/**
-	 * @param mixed $key
-	 * @param array $array
-	 * @param string $message
-	 */
-	static function keyExists( $key, array $array, $message = '' )
-	{
-		self::true( array_key_exists( $key, $array ), $message );
-	}
+    /**
+     * @param mixed $value
+     * @return string
+     */
+    private static function dump($value) {
+        return var_export($value, true);
+    }
 
-	static function true( $actual, $message = '' )
-	{
-		self::equal( $actual, true, $message );
-	}
+    /**
+     * Return the type of the given value in a PhpDoc-style syntax
+     * @param mixed $value
+     * @param bool  $simple
+     * @return string
+     * @throws \Exception
+     */
+    private static function typeof($value, $simple = false) {
+        if (is_string($value)) {
+            return 'string';
+        } else if (is_int($value)) {
+            return 'int';
+        } else if (is_object($value)) {
+            return $simple ? 'object' : get_class($value);
+        } else if (is_resource($value)) {
+            return 'resource';
+        } else if (is_bool($value)) {
+            return 'bool';
+        } else if (is_float($value)) {
+            return 'float';
+        } else if (is_null($value)) {
+            return 'null';
+        } else if (is_array($value)) {
+            if ($simple)
+                return 'array';
+            $types = array();
+            foreach ($value as $v)
+                $types[self::typeof($v, $simple)] = true;
+            $types = array_keys($types);
+            if (!$types) {
+                return 'array';
+            } else if (count($types) == 1) {
+                return $types[0] . '[]';
+            } else {
+                sort($types, SORT_STRING);
+                return '(' . join('|', $types) . ')[]';
+            }
+        } else {
+            // @codeCoverageIgnoreStart
+            throw new \Exception("Cannot deduce type of $value");
+            // @codeCoverageIgnoreEnd
+        }
+    }
 
-	/**
-	 * @param object $object
-	 * @param string $message
-	 * @return object
-	 */
-	static function object( $object, $message = '' )
-	{
-		self::type( $object, 'object', $message );
-		return $object;
-	}
+    /**
+     * @param mixed  $key
+     * @param array  $array
+     * @param string $message
+     * @throws AssertionFailed
+     */
+    static function keyExists($key, array $array, $message = '') {
+        if (!array_key_exists($key, $array)) {
+            throw new AssertionFailed($message ?: "Key '$key' does not exist");
+        }
+    }
 
-	/**
-	 * @param bool|float|int|null|string $value
-	 * @return bool|float|int|null|string
-	 */
-	static function scalar( $value )
-	{
-		self::in( gettype( $value ), array( 'boolean', 'integer', 'double', 'string', 'NULL' ) );
-		return $value;
-	}
+    private static function an($thing) {
+        static $vowels = array('a', 'e', 'i', 'o', 'u');
+        return in_array(strtolower(substr($thing, 0, 1)), $vowels, true) ? "an $thing" : "a $thing";
+    }
 
-	private static function type( $value, $type, $message = '' )
-	{
-		self::equal( gettype( $value ), $type, $message );
-	}
+    static function true($actual, $message = '') {
+        self::equal($actual, true, $message);
+    }
 
-	/**
-	 * @param string $value
-	 * @param string $message
-	 * @return string
-	 * @throws AssertionFailed
-	 */
-	static function string( $value, $message = '' )
-	{
-		if ( !is_string( $value ) )
-			self::type( $value, 'string', $message );
-		return $value;
-	}
+    /**
+     * @param object $value
+     * @param string $message
+     * @return object
+     * @throws AssertionFailed
+     */
+    static function object($value, $message = '') {
+        if (!is_object($value))
+            throw self::wrongType($value, 'object', $message);
+        return $value;
+    }
 
-	/**
-	 * @param float  $value
-	 * @param string $message
-	 * @return float
-	 * @throws AssertionFailed
-	 */
-	static function float( $value, $message = '' )
-	{
-		if ( !is_float( $value ) )
-			self::type( $value, 'double', $message );
-		return $value;
-	}
+    /**
+     * Any type besides array, object and resource
+     * @param bool|float|int|null|string $value
+     * @param string                     $message
+     * @return bool|float|int|null|string
+     * @throws AssertionFailed
+     */
+    static function scalar($value, $message = '') {
+        if (!is_scalar($value) && !is_null($value))
+            throw self::wrongType($value, 'bool|float|int|null|string', $message);
+        return $value;
+    }
 
-	/**
-	 * @param array  $value
-	 * @param string $message
-	 * @return array
-	 * @throws AssertionFailed
-	 */
-	static function isArray( $value, $message = '' )
-	{
-		if ( !is_array( $value ) )
-			self::type( $value, 'array', $message );
-		return $value;
-	}
+    /**
+     * @param mixed  $value
+     * @param string $type
+     * @param string $message
+     * @return AssertionFailed
+     * @throws \Exception
+     */
+    private static function wrongType($value, $type, $message = '') {
+        return new AssertionFailed($message ?: "Needed " . self::an($type) . ", got " . self::an(self::typeof($value)));
+    }
 
-	/**
-	 * @param resource $value
-	 * @param string   $message
-	 * @return resource
-	 * @throws AssertionFailed
-	 */
-	static function resource( $value, $message = '' )
-	{
-		if ( !is_resource( $value ) )
-			self::type( $value, 'resource', $message );
-		return $value;
-	}
+    /**
+     * @param string $value
+     * @param string $message
+     * @return string
+     * @throws AssertionFailed
+     */
+    static function string($value, $message = '') {
+        if (!is_string($value))
+            throw self::wrongType($value, 'string', $message);
+        return $value;
+    }
 
-	/**
-	 * @param int    $value
-	 * @param string $message
-	 * @return int
-	 * @throws AssertionFailed
-	 */
-	static function int( $value, $message = '' )
-	{
-		if ( !is_int( $value ) )
-			self::type( $value, 'integer', $message );
-		return $value;
-	}
+    /**
+     * @param float  $value
+     * @param string $message
+     * @return float
+     * @throws AssertionFailed
+     */
+    static function float($value, $message = '') {
+        if (!is_float($value))
+            throw self::wrongType($value, 'float', $message);
+        return $value;
+    }
 
-	/**
-	 * @param bool   $value
-	 * @param string $message
-	 * @return bool
-	 * @throws AssertionFailed
-	 */
-	static function bool( $value, $message = '' )
-	{
-		if ( !is_bool( $value ) )
-			self::type( $value, 'boolean', $message );
-		return $value;
-	}
+    /**
+     * @deprecated
+     * @see array_
+     * @param array  $value
+     * @param string $message
+     * @return array
+     * @throws AssertionFailed
+     */
+    static function isArray($value, $message = '') {
+        return self::array_($value, $message);
+    }
 
-	/**
-	 * @param null   $value
-	 * @param string $message
-	 * @return null
-	 * @throws AssertionFailed
-	 */
-	static function null( $value, $message = '' )
-	{
-		if ( !is_null( $value ) )
-			self::type( $value, 'NULL', $message );
-		return $value;
-	}
+    /**
+     * @param array  $value
+     * @param string $message
+     * @return array
+     * @throws AssertionFailed
+     */
+    static function array_($value, $message = '') {
+        if (!is_array($value))
+            throw self::wrongType($value, 'array', $message);
+        return $value;
+    }
 
-	static function false( $actual, $message = '' )
-	{
-		self::equal( $actual, false, $message );
-	}
+    /**
+     * @param resource $value
+     * @param string   $message
+     * @return resource
+     * @throws AssertionFailed
+     */
+    static function resource($value, $message = '') {
+        if (!is_resource($value))
+            throw self::wrongType($value, 'resource', $message);
+        return $value;
+    }
 
-	static function notAssoc( array $array )
-	{
-		Assert::isArray( $array );
-		$i = 0;
-		foreach ( $array as $k => $v )
-			Assert::equal( $k, $i++ );
-		return $array;
-	}
+    /**
+     * @param int    $value
+     * @param string $message
+     * @return int
+     * @throws AssertionFailed
+     */
+    static function int($value, $message = '') {
+        if (!is_int($value))
+            throw self::wrongType($value, 'int', $message);
+        return $value;
+    }
 
-	static function in( $value, array $values )
-	{
-		self::isArray( $values );
+    /**
+     * @param bool   $value
+     * @param string $message
+     * @return bool
+     * @throws AssertionFailed
+     */
+    static function bool($value, $message = '') {
+        if (!is_bool($value))
+            throw self::wrongType($value, 'bool', $message);
+        return $value;
+    }
 
-		if ( in_array( $value, $values, true ) )
-			return $value;
+    /**
+     * @param null   $value
+     * @param string $message
+     * @return null
+     * @throws AssertionFailed
+     */
+    static function null($value, $message = '') {
+        if (!is_null($value))
+            throw self::wrongType($value, 'null', $message);
+        return $value;
+    }
 
-		$value  = self::dump( $value );
-		$values = self::dump( $values );
+    static function false($actual, $message = '') {
+        self::equal($actual, false, $message);
+    }
 
-		throw new AssertionFailed( "$value must be one of: $values");
-	}
+    /**
+     * Asserts that the given array has keys of the form 0, 1, 2...N
+     * @param array $array
+     * @return array
+     * @throws AssertionFailed
+     */
+    static function list_(array $array) {
+        self::array_($array);
+        $i = 0;
+        foreach ($array as $k => $v)
+            self::equal($k, $i++);
+        return $array;
+    }
 
-	static function intish( $value )
-	{
-		if ( is_int( $value ) )
-			return $value;
-		else if ( is_string( $value ) )
-		{
-			if ( (string)(int)$value === $value )
-				return $value;
-		}
-		else if ( is_float( $value ) )
-		{
-			if ( (float)(int)$value === $value )
-				return $value;
-		}
+    /**
+     * @see list_
+     * @param array $array
+     * @return array
+     */
+    static function vector(array $array) {
+        return self::list_($array);
+    }
 
-		throw new AssertionFailed( "$value was not intish" );
-	}
+    /**
+     * @see list_
+     * @param array $array
+     * @return array
+     */
+    static function notAssoc(array $array) {
+        return self::list_($array);
+    }
 
-	static function serial( $value )
-	{
-		self::intish( $value );
+    /**
+     * Assert the value is in the array. Comparison is done strictly (===).
+     * @param mixed $value
+     * @param array $values
+     * @return string
+     * @throws AssertionFailed
+     */
+    static function in($value, array $values) {
+        self::array_($values);
 
-		if ( $value > 0 )
-			return $value;
+        if (in_array($value, $values, true))
+            return $value;
 
-		throw new AssertionFailed( "'{$value}' is not a positive integer :'(" );
-	}
+        $oneOf = array();
+        foreach ($values as $v)
+            $oneOf[] = self::dump($v);
+
+        throw new AssertionFailed(self::dump($value) . " must be one of: " . join(', ', $oneOf));
+    }
+
+    /**
+     * Assert that something is an int or an int stored in a float or string
+     * Eg: 15 (int), "15" (string), 15.0 (float), but not "hello15" (string) or 15.1 (float)
+     * @param int|float|string $value
+     * @return int|float|string
+     * @throws AssertionFailed
+     */
+    static function intish($value) {
+        $int = (int)$value;
+        if (
+            $value === $int ||
+            $value === (string)$int ||
+            $value === (float)$int
+        ) {
+            return $value;
+        } else {
+            throw new AssertionFailed("$value was not intish");
+        }
+    }
+
+    /**
+     * Same as intish() except must be > 0. Useful for database IDs.
+     * @param int|float|string $value
+     * @see intish
+     * @return int|float|string
+     * @throws AssertionFailed
+     */
+    static function serial($value) {
+        self::intish($value);
+
+        if ($value > 0) {
+            return $value;
+        } else {
+            throw new AssertionFailed("'$value' is not a positive integer :'(");
+        }
+    }
+
+    /**
+     * @param int[]  $ints
+     * @param string $message
+     * @return \int[]
+     * @throws AssertionFailed
+     */
+    static function ints(array $ints, $message = '') {
+        self::array_($ints);
+        foreach ($ints as $int) {
+            if (!is_int($int)) {
+                throw self::wrongType($ints, 'int[]', $message);
+            }
+        }
+        return $ints;
+    }
+
+    /**
+     * @param string[] $strings
+     * @param string   $message
+     * @return \string[]
+     * @throws AssertionFailed
+     */
+    static function strings(array $strings, $message = '') {
+        self::array_($strings);
+        foreach ($strings as $string) {
+            if (!is_string($string)) {
+                throw self::wrongType($strings, 'string[]', $message);
+            }
+        }
+        return $strings;
+    }
+
+    /**
+     * @param float[] $floats
+     * @param string  $message
+     * @return \float[]
+     * @throws AssertionFailed
+     */
+    static function floats(array $floats, $message = '') {
+        self::array_($floats);
+        foreach ($floats as $float) {
+            if (!is_float($float)) {
+                throw self::wrongType($floats, 'float[]', $message);
+            }
+        }
+        return $floats;
+    }
+
+    /**
+     * @param object[] $objects
+     * @param string   $message
+     * @return \object[]
+     * @throws AssertionFailed
+     */
+    static function objects(array $objects, $message = '') {
+        self::array_($objects);
+        foreach ($objects as $object) {
+            if (!is_object($object)) {
+                throw self::wrongType($objects, 'object[]', $message);
+            }
+        }
+        return $objects;
+    }
+
+    /**
+     * @param resource[] $resources
+     * @param string     $message
+     * @return \resource[]
+     * @throws AssertionFailed
+     */
+    static function resources(array $resources, $message = '') {
+        self::array_($resources);
+        foreach ($resources as $resource) {
+            if (!is_resource($resource)) {
+                throw self::wrongType($resources, 'resource[]', $message);
+            }
+        }
+        return $resources;
+    }
+
+    /**
+     * @param bool[] $bools
+     * @param string $message
+     * @return \bool[]
+     * @throws AssertionFailed
+     */
+    static function bools(array $bools, $message = '') {
+        self::array_($bools);
+        foreach ($bools as $bool) {
+            if (!is_bool($bool)) {
+                throw self::wrongType($bools, 'bool[]', $message);
+            }
+        }
+        return $bools;
+    }
 }
 
-class AssertionFailed extends \FailWhale\Exception
-{
+final class AssertionFailed extends \Exception {
+    function __construct($message = "", $code = 0, Exception $previous = null) {
+        parent::__construct($message, $code, $previous);
+
+        // Add the $this field to the backtrace
+        $prop = new \ReflectionProperty('Exception', 'trace');
+        $prop->setAccessible(true);
+        $prop->setValue($this, array_slice(debug_backtrace(), 1));
+    }
 }
