@@ -2,8 +2,6 @@
 
 namespace IVT;
 
-use Exception;
-
 final class Assert {
     static function equal($actual, $expected, $message = '') {
         if ($actual === $expected)
@@ -411,7 +409,7 @@ final class Assert {
 }
 
 final class AssertionFailed extends \Exception {
-    function __construct($message = "", $code = 0, Exception $previous = null) {
+    function __construct($message = "", $code = 0, \Exception $previous = null) {
         parent::__construct($message, $code, $previous);
 
         // Add the $this field to the backtrace
