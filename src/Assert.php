@@ -69,11 +69,14 @@ final class Assert {
      * @param mixed  $key
      * @param array  $array
      * @param string $message
+     * @return mixed
      * @throws AssertionFailed
      */
     static function keyExists($key, array $array, $message = '') {
         if (!array_key_exists($key, $array)) {
             throw new AssertionFailed($message ?: "Key '$key' does not exist");
+        } else {
+            return $array[$key];
         }
     }
 
