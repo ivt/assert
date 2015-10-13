@@ -6,14 +6,13 @@ PHP assertions library
 
 1. Checking output of functions that return `false` or `null` on error
     ```php
-    use IVT\Assert;
-    
     // good (may silently fail depending on the error handler)
     
     $handle = fopen('/my/file', 'rb');
     $data = fread($handle, 100);
     fclose($handle);
-    
+    ```
+    ```php
     // better (verbose)
     
     $handle = fopen('/my/file', 'rb');
@@ -24,9 +23,11 @@ PHP assertions library
         throw new Exception('fread() failed');
     if (fclose($handle) === false)
         throw new Exception('fclose() failed');
-    
+    ```
+    ```php
     // best (will fail regardless of the error handler)
     
+    use IVT\Assert;
     Assert::resource($handle = fopen('/my/file', 'rb'));
     Assert::string($data = fread($handle, 100));
     Assert::true(fclose($handle));
