@@ -95,7 +95,7 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \IVT\AssertionFailed
      * @expectedExceptionCode    0
-     * @expectedExceptionMessage Needed a float, got an array
+     * @expectedExceptionMessage Needed a float, got a void[]
      */
     function testFloatFail() {
         /** @noinspection PhpParamsInspection */
