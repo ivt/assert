@@ -409,6 +409,32 @@ final class Assert {
         }
         return $bools;
     }
+
+    /**
+     * @param mixed  $value
+     * @param string $message
+     * @return mixed
+     * @throws AssertionFailed
+     */
+    static function truthy($value, $message = '') {
+        if (!$value)
+            throw new AssertionFailed($message ?: self::dump($value) . " should be truthy");
+        else
+            return $value;
+    }
+
+    /**
+     * @param mixed  $value
+     * @param string $message
+     * @return mixed
+     * @throws AssertionFailed
+     */
+    static function falsy($value, $message = '') {
+        if ($value)
+            throw new AssertionFailed($message ?: self::dump($value) . " should be falsy");
+        else
+            return $value;
+    }
 }
 
 final class AssertionFailed extends \Exception {
