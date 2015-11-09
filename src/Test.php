@@ -102,6 +102,26 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
         Assert::float(array());
     }
 
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Needed a float, got an int[]
+     */
+    function testTypeOfArray1() {
+        /** @noinspection PhpParamsInspection */
+        Assert::float(array(1));
+    }
+
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Needed a float, got a (float|int|string)[]
+     */
+    function testTypeOfArray3() {
+        /** @noinspection PhpParamsInspection */
+        Assert::float(array("foo", 2, 3.5));
+    }
+
     function testArrayPass() {
         Assert::array_(array(null, 'herrderr'));
         /** @noinspection PhpDeprecationInspection */
