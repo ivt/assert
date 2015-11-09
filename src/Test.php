@@ -310,4 +310,30 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
     function testBoolsFail() {
         Assert::bools(array(7));
     }
+
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage '0' should be truthy
+     */
+    function testTruthyFails() {
+        Assert::truthy('0');
+    }
+
+    function testTruthyPass() {
+        Assert::truthy(1);
+    }
+
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage 1 should be falsy
+     */
+    function testFalsyFails() {
+        Assert::falsy(1);
+    }
+
+    function testFalsyPass() {
+        Assert::falsy(0);
+    }
 }
