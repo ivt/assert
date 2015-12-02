@@ -264,7 +264,7 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
         Assert::serial('-78634');
     }
 
-    function testArarysOf() {
+    function testArraysOf() {
         $resource = fopen('php://memory', 'rb');
 
         Assert::ints(array(1, -923, 94765, PHP_INT_MAX));
