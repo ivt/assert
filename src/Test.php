@@ -95,11 +95,31 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \IVT\AssertionFailed
      * @expectedExceptionCode    0
-     * @expectedExceptionMessage Needed a float, got an array
+     * @expectedExceptionMessage Needed a float, got a void[]
      */
     function testFloatFail() {
         /** @noinspection PhpParamsInspection */
         Assert::float(array());
+    }
+
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Needed a float, got an int[]
+     */
+    function testTypeOfArray1() {
+        /** @noinspection PhpParamsInspection */
+        Assert::float(array(1));
+    }
+
+    /**
+     * @expectedException \IVT\AssertionFailed
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Needed a float, got a (float|int|string)[]
+     */
+    function testTypeOfArray3() {
+        /** @noinspection PhpParamsInspection */
+        Assert::float(array("foo", 2, 3.5));
     }
 
     function testArrayPass() {
@@ -244,7 +264,7 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
         Assert::serial('-78634');
     }
 
-    function testArarysOf() {
+    function testArraysOf() {
         $resource = fopen('php://memory', 'rb');
 
         Assert::ints(array(1, -923, 94765, PHP_INT_MAX));
