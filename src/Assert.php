@@ -24,45 +24,37 @@ final class Assert {
     /**
      * Return the type of the given value in a PhpDoc-style syntax
      * @param mixed $value
-     * @param bool  $simple
      * @return string
      * @throws \Exception
      */
-    private static function typeof($value, $simple = false) {
-        if (is_string($value)) {
-            return 'string';
-        } else if (is_int($value)) {
-            return 'int';
-        } else if (is_object($value)) {
-            return $simple ? 'object' : get_class($value);
-        } else if (is_resource($value)) {
-            return 'resource';
-        } else if (is_bool($value)) {
-            return 'bool';
-        } else if (is_float($value)) {
-            return 'float';
-        } else if (is_null($value)) {
-            return 'null';
-        } else if (is_array($value)) {
-            if ($simple)
-                return 'array';
+    static function typeof($value) {
+        if (is_string($value)) return 'string';
+        if (is_int($value)) return 'int';
+        if (is_object($value)) return get_class($value);
+        if (is_resource($value)) return 'resource';
+        if (is_bool($value)) return 'bool';
+        if (is_float($value)) return 'float';
+        if (is_null($value)) return 'null';
+
+        if (is_array($value)) {
             $types = array();
             foreach ($value as $v)
-                $types[self::typeof($v, $simple)] = true;
+                $types[self::typeof($v)] = true;
             $types = array_keys($types);
-            if (!$types) {
-                return 'array';
-            } else if (count($types) == 1) {
-                return $types[0] . '[]';
-            } else {
-                sort($types, SORT_STRING);
-                return '(' . join('|', $types) . ')[]';
+            switch (count($types)) {
+                case 0:
+                    return 'void[]';
+                case 1:
+                    return $types[0] . '[]';
+                default:
+                    sort($types, SORT_STRING);
+                    return '(' . join('|', $types) . ')[]';
             }
-        } else {
-            // @codeCoverageIgnoreStart
-            throw new \Exception("Cannot deduce type of $value");
-            // @codeCoverageIgnoreEnd
         }
+
+        // @codeCoverageIgnoreStart
+        throw new \Exception('Unknown type: ' . gettype($value));
+        // @codeCoverageIgnoreEnd
     }
 
     /**
