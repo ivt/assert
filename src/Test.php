@@ -356,4 +356,16 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
     function testFalsyPass() {
         Assert::falsy(0);
     }
+
+    function testTypeof() {
+        self::assertEquals(Assert::typeof(null), 'null');
+        self::assertEquals(Assert::typeof(true), 'bool');
+        self::assertEquals(Assert::typeof(1), 'int');
+        self::assertEquals(Assert::typeof(0.3), 'float');
+        self::assertEquals(Assert::typeof(fopen('php://output', 'wb')), 'resource');
+        self::assertEquals(Assert::typeof(new \stdClass), 'stdClass');
+        self::assertEquals(Assert::typeof(array()), 'void[]');
+        self::assertEquals(Assert::typeof(array(8)), 'int[]');
+        self::assertEquals(Assert::typeof(array('string', 45.2)), '(float|string)[]');
+    }
 }
