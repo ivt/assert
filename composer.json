@@ -2,7 +2,9 @@
     "name": "ivt/assert",
     "description": "Assertions for specific types, returning input value to reduce temporary variables",
     "autoload": {
-        "classmap": ["src/"]
+        "files": [
+            "src/autoload.php"
+        ]
     },
     "require-dev": {
         "phpunit/phpunit": "^4.8.0"

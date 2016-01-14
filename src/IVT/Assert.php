@@ -2,6 +2,8 @@
 
 namespace IVT;
 
+use IVT\Assert\_Internal\PHPType\Type;
+
 final class Assert {
     static function equal($actual, $expected, $message = '') {
         if ($actual === $expected)
@@ -28,33 +30,7 @@ final class Assert {
      * @throws \Exception
      */
     static function typeof($value) {
-        if (is_string($value)) return 'string';
-        if (is_int($value)) return 'int';
-        if (is_object($value)) return get_class($value);
-        if (is_resource($value)) return 'resource';
-        if (is_bool($value)) return 'bool';
-        if (is_float($value)) return 'float';
-        if (is_null($value)) return 'null';
-
-        if (is_array($value)) {
-            $types = array();
-            foreach ($value as $v)
-                $types[self::typeof($v)] = true;
-            $types = array_keys($types);
-            switch (count($types)) {
-                case 0:
-                    return 'void[]';
-                case 1:
-                    return $types[0] . '[]';
-                default:
-                    sort($types, SORT_STRING);
-                    return '(' . join('|', $types) . ')[]';
-            }
-        }
-
-        // @codeCoverageIgnoreStart
-        throw new \Exception('Unknown type: ' . gettype($value));
-        // @codeCoverageIgnoreEnd
+        return Type::fromValue($value)->toString();
     }
 
     /**
@@ -429,13 +405,3 @@ final class Assert {
     }
 }
 
-final class AssertionFailed extends \Exception {
-    function __construct($message = "", $code = 0, \Exception $previous = null) {
-        parent::__construct($message, $code, $previous);
-
-        // Add the $this field to the backtrace
-        $prop = new \ReflectionProperty('Exception', 'trace');
-        $prop->setAccessible(true);
-        $prop->setValue($this, array_slice(debug_backtrace(), 1));
-    }
-}

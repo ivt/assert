@@ -1,10 +1,10 @@
 <?php
 
-namespace IVT\AssertTest;
+namespace IVT\Assert\_Internal;
 
 use IVT\Assert;
 
-class AssertTest extends \PHPUnit_Framework_TestCase {
+class Test extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \IVT\AssertionFailed
      * @expectedExceptionCode    0
@@ -367,5 +367,13 @@ class AssertTest extends \PHPUnit_Framework_TestCase {
         self::assertEquals(Assert::typeof(array()), 'void[]');
         self::assertEquals(Assert::typeof(array(8)), 'int[]');
         self::assertEquals(Assert::typeof(array('string', 45.2)), '(float|string)[]');
+
+        self::assertEquals(
+            Assert::typeof(array(
+                array('string'),
+                array('string2', 45.2)
+            )),
+            '(float|string)[][]'
+        );
     }
 }
