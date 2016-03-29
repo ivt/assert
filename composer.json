@@ -1,6 +1,7 @@
 {
     "name": "ivt/assert",
     "description": "Assertions for specific types, returning input value to reduce temporary variables",
+    "license": "MIT",
     "autoload": {
         "files": [
             "src/autoload.php"
