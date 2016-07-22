@@ -403,5 +403,34 @@ final class Assert {
         else
             return $value;
     }
+
+    static function throws(\Closure $closure, $message = '') {
+        try {
+            $ret = $closure();
+        }
+        catch (\Exception $e) {
+            return $e;
+        }
+
+        $val = self::dump($ret);
+        throw new AssertionFailed($message ?: "Expected closure to throw, but it returned $val" );
+    }
+
+    static function throwsInstanceOf(\Closure $closure, \Exception $instanceOfSameType, $message = '') {
+        try {
+            $ret = $closure();
+        }
+        catch (\Exception $e) {
+            $actualType = get_class($e);
+            $expectedType = get_class($instanceOfSameType);
+            if ($expectedType === $actualType)
+                return $e;
+            else
+                throw new AssertionFailed($message ?: "Expected exception of type $expectedType, but it was of type $actualType");
+        }
+
+        $val = self::dump($ret);
+        throw new AssertionFailed($message ?: "Expected closure to throw, but it returned $val" );
+    }
 }
 

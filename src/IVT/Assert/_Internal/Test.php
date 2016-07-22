@@ -3,6 +3,7 @@
 namespace IVT\Assert\_Internal;
 
 use IVT\Assert;
+use IVT\AssertionFailed;
 
 class Test extends \PHPUnit_Framework_TestCase {
     /**
@@ -375,5 +376,34 @@ class Test extends \PHPUnit_Framework_TestCase {
             )),
             '(float|string)[][]'
         );
+    }
+
+    function testThrow() {
+        Assert::throws(function() {throw new \Exception;});
+        Assert::throwsInstanceOf(function() {throw new \Exception;}, new \Exception);
+
+        $e = null;
+        try {
+            Assert::throws(function() {});
+        } catch (AssertionFailed $e) {
+        }
+        if (!$e)
+            throw new AssertionFailed();
+
+        $e = null;
+        try {
+            Assert::throwsInstanceOf(function() {}, new AssertionFailed);
+        } catch (AssertionFailed $e) {
+        }
+        if (!$e)
+            throw new AssertionFailed();
+
+        $e = null;
+        try {
+            Assert::throwsInstanceOf(function() {throw new \Exception;}, new AssertionFailed);
+        } catch (AssertionFailed $e) {
+        }
+        if (!$e)
+            throw new AssertionFailed();
     }
 }
